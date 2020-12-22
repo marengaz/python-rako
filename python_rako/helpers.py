@@ -16,7 +16,7 @@ def deserialise_byte_list(byte_list):
         message_type = MessageType(byte_list[0])
     except ValueError:
         raise RakoDeserialisationException(
-            "Unsupported UDP message type: byte_list=%s", byte_list
+            f"Unsupported UDP message type: {byte_list=}"
         )
 
     if message_type == MessageType.STATUS:
@@ -45,18 +45,18 @@ def deserialise_status_message(byte_list):
             channel=channel,
             brightness=data[1],
         )
-    else:
-        if command == CommandType.SET_SCENE:
-            scene = data[1]
-        else:
-            # command is one of SC1_LEGACY, SC2_LEGACY, SC3_LEGACY, SC4_LEGACY
-            scene = SCENE_COMMAND_TO_NUMBER[command]
 
-        return SceneStatusMessage(
-            room=room,
-            channel=channel,
-            scene=scene,
-        )
+    if command == CommandType.SET_SCENE:
+        scene = data[1]
+    else:
+        # command is one of SC1_LEGACY, SC2_LEGACY, SC3_LEGACY, SC4_LEGACY
+        scene = SCENE_COMMAND_TO_NUMBER[command]
+
+    return SceneStatusMessage(
+        room=room,
+        channel=channel,
+        scene=scene,
+    )
 
 
 def deserialise_level_cache_message(byte_list: List[int]) -> LevelCacheMessage:

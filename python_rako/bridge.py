@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncGenerator, Iterable, Generator
+from typing import AsyncGenerator, Generator
 
 import aiohttp
 import asyncio_dgram
@@ -69,7 +69,8 @@ class Bridge:
         self, session: aiohttp.ClientSession
     ) -> AsyncGenerator[Light, None]:
         rako_xml = await self.get_rako_xml(session)
-        yield self.get_lights_from_discovery_xml(rako_xml)
+        for light in self.get_lights_from_discovery_xml(rako_xml):
+            yield light
 
     async def get_info(self, session: aiohttp.ClientSession) -> BridgeInfo:
         try:
