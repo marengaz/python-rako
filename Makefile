@@ -36,8 +36,8 @@ lint: lint-black lint-flake8 lint-pylint lint-mypy ## Run all linters.
 
 .PHONY: lint-black
 lint-black: ## Run linting using black & blacken-docs.
-	black --safe --target-version py39 python_rako tests examples; \
-	blacken-docs --target-version py39
+	black --safe --target-version py38 python_rako tests examples; \
+	blacken-docs --target-version py38
 
 .PHONY: lint-flake8
 lint-flake8: ## Run linting using flake8 (pycodestyle/pydocstyle).

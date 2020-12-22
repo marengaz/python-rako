@@ -38,7 +38,7 @@ def deserialise_status_message(byte_list):
     room = byte_list[2] * 256 + byte_list[3]
     channel = byte_list[4]
     command = CommandType(byte_list[5])
-    data = byte_list[6: 6 + data_length]
+    data = byte_list[6 : 6 + data_length]
     if command in (CommandType.LEVEL_SET_LEGACY, CommandType.SET_LEVEL):
         return ChannelStatusMessage(
             room=room,
