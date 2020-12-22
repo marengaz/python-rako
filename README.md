@@ -30,8 +30,10 @@ pip install python-rako
 ```python
 import asyncio
 
+
 async def main():
     # TODO
+    pass
 
 
 if __name__ == "__main__":

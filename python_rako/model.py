@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from python_rako.const import MessageType, CommandType
+from python_rako.const import CommandType, MessageType
 
 
 @dataclass
@@ -28,14 +28,16 @@ class BridgeInfo:
     charset: str
 
 
-### Message: Bridge to Client
+# Message: Bridge to Client
 @dataclass
 class CacheMessage:
     pass
 
+
 @dataclass
 class LevelCacheMessage(CacheMessage):
     pass
+
 
 @dataclass
 class SceneCacheMessage(CacheMessage):
@@ -58,7 +60,7 @@ class ChannelStatusMessage(StatusMessage):
     brightness: int
 
 
-### Message: Client to Bridge
+# Message: Client to Bridge
 @dataclass
 class Command:
     room: int
@@ -66,6 +68,3 @@ class Command:
     command: CommandType
     data: List[int]
     message_type: MessageType = MessageType.REQUEST
-
-
-

@@ -1,15 +1,14 @@
 from enum import Enum
 
-
 RAKO_BRIDGE_DEFAULT_PORT = 9761
 
 
 class MessageType(Enum):
-    QUERY = ord('Q')
-    SCENE_CACHE = ord('C')
-    LEVEL_CACHE = ord('X')
-    REQUEST = ord('R')
-    STATUS = ord('S')
+    QUERY = ord("Q")
+    SCENE_CACHE = ord("C")
+    LEVEL_CACHE = ord("X")
+    REQUEST = ord("R")
+    STATUS = ord("S")
 
 
 class RequestType(Enum):
@@ -42,7 +41,6 @@ SCENE_NUMBER_TO_COMMAND = {
     2: CommandType.SC2_LEGACY,
     3: CommandType.SC3_LEGACY,
     4: CommandType.SC4_LEGACY,
-    0: CommandType.OFF
+    0: CommandType.OFF,
 }
 SCENE_COMMAND_TO_NUMBER = {v: k for k, v in SCENE_NUMBER_TO_COMMAND.items()}
-
