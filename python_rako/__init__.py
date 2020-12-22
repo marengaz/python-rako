@@ -1,10 +1,7 @@
 import logging
 import socket
 
-from python_rako.bridge import Bridge
 from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT
-from python_rako.helpers import deserialise_byte_list
-from python_rako.model import Light, StatusMessage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,11 +14,10 @@ def discover_bridge():
     resp = broadcast_and_listen_for_response(sock)
     if resp:
         _, (host, _) = resp
-        _LOGGER.debug(f"found rako bridge at {host}")
+        _LOGGER.debug("found rako bridge at %s", host)
         return host
-    else:
-        _LOGGER.error("Cannot find a rakobrige")
-        return None
+
+    _LOGGER.error("Cannot find a rakobrige")
 
 
 def broadcast_and_listen_for_response(sock):
@@ -36,5 +32,5 @@ def broadcast_and_listen_for_response(sock):
             _LOGGER.debug(resp)
             return resp
         except socket.timeout:
-            _LOGGER.debug(f"No rako bridge found on try #{i}")
+            _LOGGER.debug("No rako bridge found on try #%s", i)
             i = i + 1

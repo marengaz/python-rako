@@ -16,22 +16,21 @@ def deserialise_byte_list(byte_list):
         message_type = MessageType(byte_list[0])
     except ValueError:
         raise RakoDeserialisationException(
-            f"Unsupported UDP message type: {byte_list=}"
+            "Unsupported UDP message type: byte_list=%s", byte_list
         )
 
     if message_type == MessageType.STATUS:
         return deserialise_status_message(byte_list)
 
-    elif message_type == MessageType.SCENE_CACHE:
+    if message_type == MessageType.SCENE_CACHE:
         return deserialise_scene_cache_message(byte_list)
 
-    elif message_type == MessageType.LEVEL_CACHE:
+    if message_type == MessageType.LEVEL_CACHE:
         return deserialise_level_cache_message(byte_list)
 
-    else:
-        raise RakoDeserialisationException(
-            f"Unsupported UDP message: {message_type=}, {byte_list=}"
-        )
+    raise RakoDeserialisationException(
+        f"Unsupported UDP message: {message_type=}, {byte_list=}"
+    )
 
 
 def deserialise_status_message(byte_list):

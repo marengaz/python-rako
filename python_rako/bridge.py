@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, AsyncGenerator
+from typing import AsyncGenerator, Iterable
 
 import aiohttp
 import asyncio_dgram
@@ -65,7 +65,9 @@ class Bridge:
             rako_xml = await response.text()
         return rako_xml
 
-    async def discover_lights(self, session: aiohttp.ClientSession) -> AsyncGenerator[Light]:
+    async def discover_lights(
+        self, session: aiohttp.ClientSession
+    ) -> AsyncGenerator[Light, None]:
         rako_xml = await self.get_rako_xml(session)
         yield self.get_lights_from_discovery_xml(rako_xml)
 
@@ -74,9 +76,9 @@ class Bridge:
             rako_xml = await self.get_rako_xml(session)
             info = self.get_bridge_info_from_discovery_xml(rako_xml)
         except KeyError as ex:
-            raise RakoBridgeError(f"unsupported bridge: {ex}")
+            raise RakoBridgeError from f"unsupported bridge: {ex}"
         except ClientError as ex:
-            raise RakoBridgeError(f"cannot connect to bridge: {ex}")
+            raise RakoBridgeError from f"cannot connect to bridge: {ex}"
         return info
 
     @staticmethod
@@ -104,7 +106,7 @@ class Bridge:
             room_id = room["@id"]
             room_type = room["Type"]
             if room_type != "Lights":
-                _LOGGER.info(f"Unsupported room type. {room_id=} {room_type=}")
+                _LOGGER.info("Unsupported room type. room_id=%s room_type=%s", room_id, room_type)
                 continue
             room_title = room["Title"]
             for channel in room["Channel"]:
@@ -126,7 +128,7 @@ class Bridge:
         if not resp:
             return None
 
-        data, (remote_ip, remote_port) = resp
+        data, (remote_ip, _) = resp
         if remote_ip != self.host:
             return None
 
