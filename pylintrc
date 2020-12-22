@@ -54,6 +54,7 @@ confidence=
 
 disable=
     attribute-defined-outside-init,
+    raise-missing-from,
     duplicate-code,
     fixme,
     import-error,

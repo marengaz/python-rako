@@ -20,6 +20,7 @@ def discover_bridge():
     _LOGGER.error("Cannot find a rakobrige")
     return None
 
+
 def broadcast_and_listen_for_response(sock):
     # bind to the default ip address using a system provided ephemeral port
     sock.bind(("", 0))
