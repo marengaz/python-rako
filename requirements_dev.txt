@@ -1,0 +1,10 @@
+-r requirements_test.txt
+
+autopep8
+black
+blacken-docs
+pip
+pre-commit
+twine
+wheel
+yamllint

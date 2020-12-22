@@ -1,0 +1,46 @@
+<rako>
+    <info>
+        <version>2.4.0 RA</version>
+        <buildDate>Nov 17 2017 10:01:01</buildDate>
+        <hostName>RAKOBRIDGE</hostName>
+        <hostIP>someip</hostIP>
+        <hostMAC>somemac</hostMAC>
+        <hwStatus>05</hwStatus>
+        <dbVersion>-31</dbVersion>
+    </info>
+    <config>
+        <requirepassword/>
+        <passhash>NAN</passhash>
+        <charset>UTF-8</charset>
+    </config>
+    <rooms>
+        <Room id="5">
+            <Type>Lights</Type>
+            <Title>Living Room</Title>
+            <Channel id="1">
+                <type>Default</type>
+                <Name>Downlights</Name>
+                <Levels>FF347F3F000000000000000000000000</Levels>
+            </Channel>
+            <Channel id="2">
+                <type>Default</type>
+                <Name>Kitchen Downlights</Name>
+                <Levels>FF337F3F000000000000000000000000</Levels>
+            </Channel>
+        </Room>
+        <Room id="9">
+            <Type>Lights</Type>
+            <Title>Bedroom 1</Title>
+            <Channel id="1">
+                <type>Default</type>
+                <Name>Downlights</Name>
+                <Levels>FFBF7F25000000000000000000000000</Levels>
+            </Channel>
+            <Channel id="2">
+                <type>Default</type>
+                <Name>LED</Name>
+                <Levels>FFBF7F00000000000000000000000000</Levels>
+            </Channel>
+        </Room>
+    </rooms>
+</rako>

@@ -1,0 +1,12 @@
+-r requirements.txt
+
+aresponses
+coverage
+flake8
+flake8-docstrings
+isort
+mypy
+pylint
+pytest
+pytest-asyncio
+pytest-cov
