@@ -29,7 +29,7 @@ setup(
     url="https://github.com/marengaz/python-rako",
     author="Ben Marengo",
     author_email="ben@marengo.co.uk",
-    description="Asynchronous Python client for Rako Controls.",
+    description="Asynchronous Python client for Rako Controls Lighting.",
     keywords=["rako", "controls", "api", "async", "client"],
     long_description=readme,
     long_description_content_type="text/markdown",
