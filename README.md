@@ -1,4 +1,4 @@
-# Python: WLED API Client
+# Python: Rako Controls API Client
 
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]
@@ -11,7 +11,7 @@
 
 [![Buy me a coffee][buymeacoffee-shield]][buymeacoffee]
 
-Asynchronous Python client for WLED.
+Asynchronous Python client for Rako Controls.
 
 ## About
 
