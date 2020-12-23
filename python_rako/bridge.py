@@ -4,17 +4,14 @@ from typing import AsyncGenerator, Generator
 import aiohttp
 import asyncio_dgram
 import xmltodict
-from aiohttp import ClientError
 from asyncio_dgram.aio import DatagramClient, DatagramServer
 
-from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT
+from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT, CommandType, Flags
 from python_rako.exceptions import RakoBridgeError
-from python_rako.helpers import deserialise_byte_list
-from python_rako.model import BridgeInfo, Light
+from python_rako.helpers import command_to_byte_list, deserialise_byte_list
+from python_rako.model import BridgeInfo, Command, Light
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_TIMEOUT = 5
 
 
 class Bridge:
@@ -37,8 +34,8 @@ class Bridge:
         return self._dg_server
 
     @property
-    def dg_client(self):
-        return self._dg_client
+    async def dg_client(self):
+        return await self.connect_dg_commander(self.host)
 
     async def connect_dg_listener(self, listen_host: str = "0.0.0.0") -> DatagramServer:
         return await asyncio_dgram.bind((listen_host, self.port))
@@ -49,7 +46,9 @@ class Bridge:
             self._dg_server = None
 
     async def connect_dg_commander(self, command_host: str) -> DatagramServer:
-        return await asyncio_dgram.connect((command_host, self.port))
+        if not self._dg_client:
+            self._dg_client = await asyncio_dgram.connect((command_host, self.port))
+        return self._dg_client
 
     async def disconnect_dg_commander(self) -> None:
         if self._dg_client:
@@ -76,9 +75,9 @@ class Bridge:
         try:
             rako_xml = await self.get_rako_xml(session)
             info = self.get_bridge_info_from_discovery_xml(rako_xml)
-        except KeyError as ex:
+        except (KeyError, ValueError) as ex:
             raise RakoBridgeError(f"unsupported bridge: {ex}")
-        except ClientError as ex:
+        except aiohttp.ClientError as ex:
             raise RakoBridgeError(f"cannot connect to bridge: {ex}")
         return info
 
@@ -104,7 +103,7 @@ class Bridge:
     def get_lights_from_discovery_xml(xml: str) -> Generator[Light, None, None]:
         xml_dict = xmltodict.parse(xml)
         for room in xml_dict["rako"]["rooms"]["Room"]:
-            room_id = room["@id"]
+            room_id = int(room["@id"])
             room_type = room["Type"]
             if room_type != "Lights":
                 _LOGGER.info(
@@ -113,7 +112,7 @@ class Bridge:
                 continue
             room_title = room["Title"]
             for channel in room["Channel"]:
-                channel_id = channel["@id"]
+                channel_id = int(channel["@id"])
                 channel_type = channel["type"]
                 channel_name = channel["Name"]
                 channel_levels = channel["Levels"]
@@ -138,4 +137,31 @@ class Bridge:
         byte_list = list(data)
         return deserialise_byte_list(byte_list)
 
-    # async def set_channel_brightness(self, light: Light):
+    async def set_room_scene(self, room_id: int, scene: int):
+        command = Command(
+            room=room_id,
+            channel=0,
+            command=CommandType.SET_SCENE,
+            data=[Flags.USE_DEFAULT_FADE_RATE.value, scene],
+        )
+        await self._send_command(command)
+
+    async def set_room_brightness(self, room_id: int, brightness: int):
+        await self.set_channel_brightness(room_id, 0, brightness)
+
+    async def set_channel_brightness(
+        self, room_id: int, channel_id: int, brightness: int
+    ):
+        command = Command(
+            room=room_id,
+            channel=channel_id,
+            command=CommandType.SET_LEVEL,
+            data=[Flags.USE_DEFAULT_FADE_RATE.value, brightness],
+        )
+        await self._send_command(command)
+
+    async def _send_command(self, command: Command):
+        byte_list = command_to_byte_list(command)
+        dg_client = await self.dg_client
+        _LOGGER.debug("Sending command bytes: %s", byte_list)
+        await dg_client.send(bytes(byte_list))

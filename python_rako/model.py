@@ -6,9 +6,9 @@ from python_rako.const import CommandType, MessageType
 
 @dataclass
 class Light:
-    room_id: str
+    room_id: int
     room_title: str
-    channel_id: str
+    channel_id: int
     channel_type: str
     channel_name: str
     channel_levels: str

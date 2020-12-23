@@ -12,7 +12,7 @@ class MessageType(Enum):
 
 
 class RequestType(Enum):
-    SCENE_CAHCE = 1
+    SCENE_CACHE = 1
     LEVEL_CACHE = 32
     SCENE_LEVEL_CAHCE = 33
 
@@ -34,6 +34,10 @@ class CommandType(Enum):
     SET_SCENE = 49
     # FADE = 50  # unsupported
     SET_LEVEL = 52
+
+
+class Flags(Enum):
+    USE_DEFAULT_FADE_RATE = 1
 
 
 SCENE_NUMBER_TO_COMMAND = {
