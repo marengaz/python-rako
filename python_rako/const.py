@@ -1,20 +1,30 @@
 from enum import Enum
 
 RAKO_BRIDGE_DEFAULT_PORT = 9761
+sentinel = object()
 
 
 class MessageType(Enum):
-    QUERY = ord("Q")
-    SCENE_CACHE = ord("C")
-    LEVEL_CACHE = ord("X")
-    REQUEST = ord("R")
-    STATUS = ord("S")
+    QUERY = ord("Q")  # 81
+    SCENE_CACHE = ord("C")  # 67
+    LEVEL_CACHE = ord("X")  # 88
+    REQUEST = ord("R")  # 82
+    STATUS = ord("S")  # 83
+
+
+class DataRecordType(Enum):
+    DATA = 4
+    EOF = 255
 
 
 class RequestType(Enum):
     SCENE_CACHE = 1
     LEVEL_CACHE = 32
-    SCENE_LEVEL_CAHCE = 33
+    SCENE_LEVEL_CACHE = 33
+
+
+class Flags(Enum):
+    USE_DEFAULT_FADE_RATE = 1
 
 
 class CommandType(Enum):
@@ -34,10 +44,6 @@ class CommandType(Enum):
     SET_SCENE = 49
     # FADE = 50  # unsupported
     SET_LEVEL = 52
-
-
-class Flags(Enum):
-    USE_DEFAULT_FADE_RATE = 1
 
 
 SCENE_NUMBER_TO_COMMAND = {

@@ -4,21 +4,24 @@ from python_rako.const import CommandType
 from python_rako.helpers import (
     command_to_byte_list,
     deserialise_byte_list,
-    deserialise_status_message,
 )
-from python_rako.model import ChannelStatusMessage, Command, SceneStatusMessage
+from python_rako.model import ChannelStatusMessage, Command, SceneStatusMessage, SceneCache, \
+    LevelCacheItem, LevelCache, RoomChannel
 
 
 @pytest.mark.parametrize(
-    "in_bytes,exp_obj",
+    "in_cmd,exp_out",
     [
-        ([83, 7, 0, 13, 1, 12, 42, 42, 136], ChannelStatusMessage(13, 1, 42)),
-        # todo: scene cache and level cache
+        (Command(7, 0, CommandType.OFF, []), [82, 5, 0, 7, 0, 0, 244]),
+        (
+            Command(276, 5, CommandType.SET_LEVEL, [0, 255]),
+            [82, 7, 1, 20, 5, 52, 0, 255, 172],
+        ),
     ],
 )
-def test_deserialise_byte_list(in_bytes, exp_obj):
-    payload_result = deserialise_byte_list(in_bytes)
-    assert payload_result == exp_obj
+def test_command_to_byte_list(in_cmd, exp_out):
+    bytes_list = command_to_byte_list(in_cmd)
+    assert bytes_list == exp_out
 
 
 @pytest.mark.parametrize(
@@ -47,20 +50,32 @@ def test_deserialise_byte_list(in_bytes, exp_obj):
     ],
 )
 def test_deserialise_status_message(in_bytes, exp_obj):
-    payload_result = deserialise_status_message(in_bytes)
+    payload_result = deserialise_byte_list(in_bytes)
     assert payload_result == exp_obj
 
 
-@pytest.mark.parametrize(
-    "in_cmd,exp_out",
-    [
-        (Command(7, 0, CommandType.OFF, []), [82, 5, 0, 7, 0, 0, 244]),
-        (
-            Command(276, 5, CommandType.SET_LEVEL, [0, 255]),
-            [82, 7, 1, 20, 5, 52, 0, 255, 172],
-        ),
-    ],
-)
-def test_command_to_byte_list(in_cmd, exp_out):
-    bytes_list = command_to_byte_list(in_cmd)
-    assert bytes_list == exp_out
+def test_deserialise_scene_cache_message():
+    payload_result = deserialise_byte_list(
+        [67, 13, 4, 5, 0, 21, 8, 17, 0, 9, 0, 10, 0, 13, 156]
+    )
+    exp_obj = SceneCache({5: 1, 21: 0, 17: 2, 9: 0, 10: 0, 13: 0})
+    assert payload_result == exp_obj
+
+
+def test_deserialise_level_cache_message():
+    res = deserialise_byte_list(
+        [
+            88,
+            4, 128, 9, 1, 255, 191, 127, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4, 128, 9, 2, 255, 191, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            123,
+        ]
+    )
+
+    padding = {i: 0 for i in range(5, 18, 1)}
+    exp = LevelCache({
+        RoomChannel(9, 1): LevelCacheItem(128, 9, 1, {**{1: 255, 2: 191, 3: 127, 4: 37}, **padding}),
+        RoomChannel(9, 2): LevelCacheItem(128, 9, 2, {**{1: 255, 2: 191, 3: 127, 4: 0}, **padding}),
+    })
+    assert res == exp
+

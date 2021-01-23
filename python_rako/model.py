@@ -1,7 +1,13 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 from python_rako.const import CommandType, MessageType
+
+
+@dataclass(frozen=True)
+class RoomChannel:
+    room_id: int
+    channel_id: int
 
 
 @dataclass
@@ -12,6 +18,10 @@ class Light:
     channel_type: str
     channel_name: str
     channel_levels: str
+
+    @property
+    def room_channel(self):
+        return RoomChannel(self.room_id, self.channel_id)
 
 
 @dataclass
@@ -30,18 +40,15 @@ class BridgeInfo:
 
 # Message: Bridge to Client
 @dataclass
-class CacheMessage:
-    pass
+class LevelCacheItem:
+    active_deleted_reserved: int
+    room: int
+    channel: int
+    scene_levels: Dict[int, int]  # scene, level
 
 
-@dataclass
-class LevelCacheMessage(CacheMessage):
-    pass
-
-
-@dataclass
-class SceneCacheMessage(CacheMessage):
-    pass
+LevelCache = dict[RoomChannel, LevelCacheItem]
+SceneCache = dict[int, int]  # room id, scene number
 
 
 @dataclass

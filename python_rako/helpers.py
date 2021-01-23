@@ -1,13 +1,12 @@
-from typing import List
+from typing import List, Dict
 
-from python_rako.const import SCENE_COMMAND_TO_NUMBER, CommandType, MessageType
+from python_rako.const import SCENE_COMMAND_TO_NUMBER, CommandType, MessageType, DataRecordType, sentinel
 from python_rako.exceptions import RakoDeserialisationException
 from python_rako.model import (
     ChannelStatusMessage,
     Command,
-    LevelCacheMessage,
-    SceneCacheMessage,
-    SceneStatusMessage,
+    LevelCache,
+    SceneStatusMessage, SceneCache, LevelCacheItem, RoomChannel,
 )
 
 
@@ -26,7 +25,10 @@ def deserialise_byte_list(byte_list):
         return deserialise_scene_cache_message(byte_list)
 
     if message_type == MessageType.LEVEL_CACHE:
-        return deserialise_level_cache_message(byte_list)
+        if byte_list[1] == DataRecordType.EOF.value:
+            return None
+        if byte_list[1] == DataRecordType.DATA.value:
+            return deserialise_level_cache_message(byte_list)
 
     raise RakoDeserialisationException(
         f"Unsupported UDP message: {message_type=}, {byte_list=}"
@@ -59,14 +61,32 @@ def deserialise_status_message(byte_list):
     )
 
 
-def deserialise_level_cache_message(byte_list: List[int]) -> LevelCacheMessage:
-    # TODO
-    raise NotImplementedError(f"{byte_list=}")
+def deserialise_level_cache_message(byte_list: List[int]) -> LevelCache:
+    scene_cache: Dict[RoomChannel, LevelCacheItem] = {}
+    it = iter(byte_list)
+    next(it)
+    for b in it:
+        if b != DataRecordType.DATA.value:
+            break
+        lc = LevelCacheItem(
+            next(it), next(it), next(it),
+            {i: next(it) for i in range(1, 18, 1)}
+        )
+        scene_cache[RoomChannel(lc.room, lc.channel)] = lc
+    return LevelCache(scene_cache)
 
 
-def deserialise_scene_cache_message(byte_list: List[int]) -> SceneCacheMessage:
-    # TODO
-    raise NotImplementedError(f"{byte_list=}")
+def deserialise_scene_cache_message(byte_list: List[int]) -> SceneCache:
+    scene_cache = SceneCache()
+    it = iter(byte_list)
+    next(it)
+    next(it)
+    for b in it:
+        room = next(it, sentinel)
+        if room == sentinel:
+            continue
+        scene_cache[room] = b / 4
+    return scene_cache
 
 
 def calc_crc(byte_list: List[int]) -> int:
