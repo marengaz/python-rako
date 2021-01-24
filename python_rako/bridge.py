@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator, Generator, Tuple
 
 import aiohttp
 import asyncio_dgram
@@ -17,7 +17,7 @@ from python_rako.const import (
 )
 from python_rako.exceptions import RakoBridgeError
 from python_rako.helpers import command_to_byte_list, deserialise_byte_list
-from python_rako.model import BridgeInfo, Command, EOFResponse, Light
+from python_rako.model import BridgeInfo, Command, EOFResponse, Light, SceneCache, LevelCache, ChannelLight, RoomLight
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ class Bridge:
     def __init__(self, host: str, port: int = RAKO_BRIDGE_DEFAULT_PORT):
         self.host = host
         self.port = port
-        self._dg_server: DatagramServer = None
+        self.level_cache: LevelCache
+        self.scene_cache: SceneCache
 
     @property
     def _discovery_url(self):
@@ -108,6 +109,7 @@ class Bridge:
                 )
                 continue
             room_title = room["Title"]
+            yield RoomLight(room_id, room_title)
             channels = (
                 room["Channel"]
                 if isinstance(room["Channel"], list)
@@ -118,7 +120,7 @@ class Bridge:
                 channel_type = channel["type"]
                 channel_name = channel["Name"]
                 channel_levels = channel["Levels"]
-                yield Light(
+                yield ChannelLight(
                     room_id,
                     room_title,
                     channel_id,
@@ -139,20 +141,24 @@ class Bridge:
         byte_list = list(data)
         return deserialise_byte_list(byte_list)
 
-    async def get_cache_state(self, cache_type: RequestType):
+    async def get_cache_state(self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE) -> Tuple[LevelCache, SceneCache]:
         async with self.get_dg_commander() as dg_client:
             _LOGGER.debug("Requesting cache: %s", cache_type)
             await dg_client.send(bytes([MessageType.QUERY.value, cache_type.value]))
 
-            responses = []
+            scene_cache: SceneCache
+            level_cache: LevelCache
             while True:
                 data, _ = await dg_client.recv()
                 response = deserialise_byte_list(list(data))
                 if isinstance(response, EOFResponse):
                     break
-                responses.append(response)
+                if isinstance(response, SceneCache):
+                    scene_cache = response
+                if isinstance(response, LevelCache):
+                    level_cache = response
 
-        return responses
+        return level_cache, scene_cache
 
     async def set_room_scene(self, room_id: int, scene: int):
         command = Command(

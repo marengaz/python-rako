@@ -122,3 +122,39 @@ def command_to_byte_list(command: Command) -> List[int]:
     )
 
     return byte_list
+
+
+_scene_brightness = {
+    # rako_scene_number: brightness
+    1: 255,
+    2: 192,
+    3: 128,
+    4: 64,
+    0: 0,
+}
+
+
+def convert_to_brightness(scene_number: int) -> int:
+    return _scene_brightness[scene_number]
+
+
+_scene_windows = {
+    # rako_scene: (brightness_high, brightness_low)
+    1: dict(low=224, high=256),  # expect 255 (100%)
+    2: dict(low=160, high=224),  # expect 192 (75%)
+    3: dict(low=96, high=160),  # expect 128 (50%)
+    4: dict(low=1, high=96),  # expect 64 (25%)
+    0: dict(low=0, high=1),  # expect 0 (0%)
+}
+
+
+def convert_to_scene(brightness: int) -> int:
+    """Return the rako scene of the light. This directly corresponds
+    to the value of the button on the app and is accessed through the
+    brightness
+    :param brightness: int representing brightness 0-255
+    """
+
+    scene = [k for k, v in _scene_windows.items() if v['low'] <= brightness < v['high']][0]
+    return scene
+

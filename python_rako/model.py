@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Iterable
 
 from python_rako.const import CommandType, MessageType
 
@@ -15,13 +15,22 @@ class Light:
     room_id: int
     room_title: str
     channel_id: int
-    channel_type: str
-    channel_name: str
-    channel_levels: str
 
     @property
     def room_channel(self):
         return RoomChannel(self.room_id, self.channel_id)
+
+
+@dataclass
+class RoomLight(Light):
+    channel_id: int = 0
+
+
+@dataclass
+class ChannelLight(Light):
+    channel_type: str
+    channel_name: str
+    channel_levels: str
 
 
 @dataclass
@@ -54,7 +63,16 @@ class LevelCacheItem:
 class LevelCache(Dict[RoomChannel, LevelCacheItem]):
     """dict of: RoomChannel, LevelCacheItem"""
 
-    pass
+    def get_channel_level(self, room_channel: RoomChannel, scene: int) -> int:
+        level_cache_item = self.get(room_channel)
+        if level_cache_item:
+            return level_cache_item.scene_levels.get(scene, 0)
+
+    def get_channel_levels(self, room: int, scene: int) -> Iterable[int, int]:
+        for lci in self.values():
+            if lci.room == room:
+                brightness = lci.scene_levels.get(scene, 0)
+                yield lci.channel, brightness
 
 
 class SceneCache(Dict[int, int]):

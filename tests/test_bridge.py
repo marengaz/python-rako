@@ -1,12 +1,13 @@
 from python_rako.bridge import Bridge
-from python_rako.model import BridgeInfo, Light
+from python_rako.model import BridgeInfo, RoomLight, ChannelLight
 
 
 def test_get_lights_from_discovery_xml(rako_xml):
     lights = Bridge.get_lights_from_discovery_xml(rako_xml)
 
     expected_lights = [
-        Light(
+        RoomLight(room_id=5, room_title='Living Room', channel_id=0),
+        ChannelLight(
             room_id=5,
             room_title="Living Room",
             channel_id=1,
@@ -14,7 +15,7 @@ def test_get_lights_from_discovery_xml(rako_xml):
             channel_name="Downlights",
             channel_levels="FF347F3F000000000000000000000000",
         ),
-        Light(
+        ChannelLight(
             room_id=5,
             room_title="Living Room",
             channel_id=2,
@@ -22,7 +23,8 @@ def test_get_lights_from_discovery_xml(rako_xml):
             channel_name="Kitchen Downlights",
             channel_levels="FF337F3F000000000000000000000000",
         ),
-        Light(
+        RoomLight(room_id=9, room_title='Bedroom 1', channel_id=0),
+        ChannelLight(
             room_id=9,
             room_title="Bedroom 1",
             channel_id=1,
@@ -30,7 +32,7 @@ def test_get_lights_from_discovery_xml(rako_xml):
             channel_name="Downlights",
             channel_levels="FFBF7F25000000000000000000000000",
         ),
-        Light(
+        ChannelLight(
             room_id=9,
             room_title="Bedroom 1",
             channel_id=2,

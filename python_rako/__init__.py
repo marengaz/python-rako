@@ -14,6 +14,8 @@ from python_rako.model import (  # noqa
     LevelCache,
     LevelCacheItem,
     Light,
+    RoomLight,
+    ChannelLight,
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
