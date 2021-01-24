@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
 from python_rako.const import CommandType, MessageType
 
@@ -39,6 +39,10 @@ class BridgeInfo:
 
 
 # Message: Bridge to Client
+class EOFResponse:
+    pass
+
+
 @dataclass
 class LevelCacheItem:
     active_deleted_reserved: int
@@ -47,8 +51,16 @@ class LevelCacheItem:
     scene_levels: Dict[int, int]  # scene, level
 
 
-LevelCache = dict[RoomChannel, LevelCacheItem]
-SceneCache = dict[int, int]  # room id, scene number
+class LevelCache(Dict[RoomChannel, LevelCacheItem]):
+    """dict of: RoomChannel, LevelCacheItem"""
+
+    pass
+
+
+class SceneCache(Dict[int, int]):
+    """dict of: room id, scene number"""
+
+    pass
 
 
 @dataclass

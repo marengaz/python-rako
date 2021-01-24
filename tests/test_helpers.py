@@ -1,12 +1,16 @@
 import pytest
 
 from python_rako.const import CommandType
-from python_rako.helpers import (
-    command_to_byte_list,
-    deserialise_byte_list,
+from python_rako.helpers import command_to_byte_list, deserialise_byte_list
+from python_rako.model import (
+    ChannelStatusMessage,
+    Command,
+    LevelCache,
+    LevelCacheItem,
+    RoomChannel,
+    SceneCache,
+    SceneStatusMessage,
 )
-from python_rako.model import ChannelStatusMessage, Command, SceneStatusMessage, SceneCache, \
-    LevelCacheItem, LevelCache, RoomChannel
 
 
 @pytest.mark.parametrize(
@@ -66,16 +70,61 @@ def test_deserialise_level_cache_message():
     res = deserialise_byte_list(
         [
             88,
-            4, 128, 9, 1, 255, 191, 127, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            4, 128, 9, 2, 255, 191, 127, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4,
+            128,
+            9,
+            1,
+            255,
+            191,
+            127,
+            37,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            128,
+            9,
+            2,
+            255,
+            191,
+            127,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             123,
         ]
     )
 
     padding = {i: 0 for i in range(5, 18, 1)}
-    exp = LevelCache({
-        RoomChannel(9, 1): LevelCacheItem(128, 9, 1, {**{1: 255, 2: 191, 3: 127, 4: 37}, **padding}),
-        RoomChannel(9, 2): LevelCacheItem(128, 9, 2, {**{1: 255, 2: 191, 3: 127, 4: 0}, **padding}),
-    })
+    exp = LevelCache(
+        {
+            RoomChannel(9, 1): LevelCacheItem(
+                128, 9, 1, {**{1: 255, 2: 191, 3: 127, 4: 37}, **padding}
+            ),
+            RoomChannel(9, 2): LevelCacheItem(
+                128, 9, 2, {**{1: 255, 2: 191, 3: 127, 4: 0}, **padding}
+            ),
+        }
+    )
     assert res == exp
-

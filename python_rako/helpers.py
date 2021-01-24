@@ -1,12 +1,22 @@
-from typing import List, Dict
+from typing import Dict, List
 
-from python_rako.const import SCENE_COMMAND_TO_NUMBER, CommandType, MessageType, DataRecordType, sentinel
+from python_rako.const import (
+    SCENE_COMMAND_TO_NUMBER,
+    CommandType,
+    DataRecordType,
+    MessageType,
+    sentinel,
+)
 from python_rako.exceptions import RakoDeserialisationException
 from python_rako.model import (
     ChannelStatusMessage,
     Command,
+    EOFResponse,
     LevelCache,
-    SceneStatusMessage, SceneCache, LevelCacheItem, RoomChannel,
+    LevelCacheItem,
+    RoomChannel,
+    SceneCache,
+    SceneStatusMessage,
 )
 
 
@@ -26,7 +36,7 @@ def deserialise_byte_list(byte_list):
 
     if message_type == MessageType.LEVEL_CACHE:
         if byte_list[1] == DataRecordType.EOF.value:
-            return None
+            return EOFResponse()
         if byte_list[1] == DataRecordType.DATA.value:
             return deserialise_level_cache_message(byte_list)
 
@@ -64,13 +74,12 @@ def deserialise_status_message(byte_list):
 def deserialise_level_cache_message(byte_list: List[int]) -> LevelCache:
     scene_cache: Dict[RoomChannel, LevelCacheItem] = {}
     it = iter(byte_list)
-    next(it)
+    next(it)  # message type
     for b in it:
         if b != DataRecordType.DATA.value:
             break
         lc = LevelCacheItem(
-            next(it), next(it), next(it),
-            {i: next(it) for i in range(1, 18, 1)}
+            next(it), next(it), next(it), {i: next(it) for i in range(1, 18, 1)}
         )
         scene_cache[RoomChannel(lc.room, lc.channel)] = lc
     return LevelCache(scene_cache)
@@ -79,13 +88,13 @@ def deserialise_level_cache_message(byte_list: List[int]) -> LevelCache:
 def deserialise_scene_cache_message(byte_list: List[int]) -> SceneCache:
     scene_cache = SceneCache()
     it = iter(byte_list)
-    next(it)
-    next(it)
+    next(it)  # message type
+    next(it)  # undocumented. following bytes?
     for b in it:
         room = next(it, sentinel)
         if room == sentinel:
             continue
-        scene_cache[room] = b / 4
+        scene_cache[room] = int(b / 4)  # type: ignore # pylint: disable=E1137
     return scene_cache
 
 
@@ -95,11 +104,11 @@ def calc_crc(byte_list: List[int]) -> int:
 
 def command_to_byte_list(command: Command) -> List[int]:
     checksum_list: List[int] = [
-        5 + len(command.data),
-        int(command.room / 256),
-        command.room % 256,
-        command.channel,
-        command.command.value,
+        5 + len(command.data),  # following bytes
+        int(command.room / 256),  # high room number
+        command.room % 256,  # low room number
+        command.channel,  # channel
+        command.command.value,  # command
     ] + command.data
 
     byte_list: List[int] = (

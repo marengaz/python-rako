@@ -46,6 +46,9 @@ class CommandType(Enum):
     SET_LEVEL = 52
 
 
+COMMAND_SUCCESS_RESPONSE = "AOK"
+
+
 SCENE_NUMBER_TO_COMMAND = {
     1: CommandType.SC1_LEGACY,
     2: CommandType.SC2_LEGACY,

@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Generator
 
 import aiohttp
@@ -6,10 +7,17 @@ import asyncio_dgram
 import xmltodict
 from asyncio_dgram.aio import DatagramClient, DatagramServer
 
-from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT, CommandType, Flags
+from python_rako.const import (
+    COMMAND_SUCCESS_RESPONSE,
+    RAKO_BRIDGE_DEFAULT_PORT,
+    CommandType,
+    Flags,
+    MessageType,
+    RequestType,
+)
 from python_rako.exceptions import RakoBridgeError
 from python_rako.helpers import command_to_byte_list, deserialise_byte_list
-from python_rako.model import BridgeInfo, Command, Light
+from python_rako.model import BridgeInfo, Command, EOFResponse, Light
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +27,6 @@ class Bridge:
         self.host = host
         self.port = port
         self._dg_server: DatagramServer = None
-        self._dg_client: DatagramClient = None
 
     @property
     def _discovery_url(self):
@@ -29,35 +36,25 @@ class Bridge:
     def _command_url(self):
         return f"http://{self.host}/rako.cgi"
 
-    @property
-    def dg_server(self):
-        return self._dg_server
+    @asynccontextmanager
+    async def get_dg_listener(self, listen_host: str = "0.0.0.0"):
+        server: DatagramServer = None
+        try:
+            server = await asyncio_dgram.bind((listen_host, self.port))
+            yield server
+        finally:
+            if server:
+                server.close()
 
-    @property
-    async def dg_client(self):
-        return await self.connect_dg_commander(self.host)
-
-    async def connect_dg_listener(self, listen_host: str = "0.0.0.0") -> DatagramServer:
-        return await asyncio_dgram.bind((listen_host, self.port))
-
-    async def disconnect_dg_listener(self) -> None:
-        if self._dg_server:
-            await self._dg_server.close()
-            self._dg_server = None
-
-    async def connect_dg_commander(self, command_host: str) -> DatagramServer:
-        if not self._dg_client:
-            self._dg_client = await asyncio_dgram.connect((command_host, self.port))
-        return self._dg_client
-
-    async def disconnect_dg_commander(self) -> None:
-        if self._dg_client:
-            await self._dg_client.close()
-            self._dg_client = None
-
-    async def shutdown(self):
-        await self.disconnect_dg_listener()
-        await self.disconnect_dg_commander()
+    @asynccontextmanager
+    async def get_dg_commander(self):
+        client: DatagramClient = None
+        try:
+            client = await asyncio_dgram.connect((self.host, self.port))
+            yield client
+        finally:
+            if client:
+                client.close()
 
     async def get_rako_xml(self, session: aiohttp.ClientSession) -> str:
         async with session.get(self._discovery_url) as response:
@@ -111,7 +108,12 @@ class Bridge:
                 )
                 continue
             room_title = room["Title"]
-            for channel in room["Channel"]:
+            channels = (
+                room["Channel"]
+                if isinstance(room["Channel"], list)
+                else [room["Channel"]]
+            )
+            for channel in channels:
                 channel_id = int(channel["@id"])
                 channel_type = channel["type"]
                 channel_name = channel["Name"]
@@ -125,8 +127,8 @@ class Bridge:
                     channel_levels,
                 )
 
-    async def next_pushed_message(self):
-        resp = await self.dg_server.recv()
+    async def next_pushed_message(self, dg_listener: DatagramServer):
+        resp = await dg_listener.recv()
         if not resp:
             return None
 
@@ -136,6 +138,21 @@ class Bridge:
 
         byte_list = list(data)
         return deserialise_byte_list(byte_list)
+
+    async def get_cache_state(self, cache_type: RequestType):
+        async with self.get_dg_commander() as dg_client:
+            _LOGGER.debug("Requesting cache: %s", cache_type)
+            await dg_client.send(bytes([MessageType.QUERY.value, cache_type.value]))
+
+            responses = []
+            while True:
+                data, _ = await dg_client.recv()
+                response = deserialise_byte_list(list(data))
+                if isinstance(response, EOFResponse):
+                    break
+                responses.append(response)
+
+        return responses
 
     async def set_room_scene(self, room_id: int, scene: int):
         command = Command(
@@ -162,6 +179,10 @@ class Bridge:
 
     async def _send_command(self, command: Command):
         byte_list = command_to_byte_list(command)
-        dg_client = await self.dg_client
-        _LOGGER.debug("Sending command bytes: %s", byte_list)
-        await dg_client.send(bytes(byte_list))
+        async with self.get_dg_commander() as dg_client:
+            _LOGGER.debug("Sending command bytes: %s", byte_list)
+            await dg_client.send(bytes(byte_list))
+            data, _ = await dg_client.recv()
+
+        if data.decode("utf8").strip() != COMMAND_SUCCESS_RESPONSE:
+            _LOGGER.warning("Bad response after command %s %s", command, data)
