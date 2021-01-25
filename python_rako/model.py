@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Iterable
+from typing import Dict, Iterable, List, Tuple
 
 from python_rako.const import CommandType, MessageType
 
@@ -60,6 +60,7 @@ class LevelCacheItem:
     scene_levels: Dict[int, int]  # scene, level
 
 
+# pylint: disable=E1101
 class LevelCache(Dict[RoomChannel, LevelCacheItem]):
     """dict of: RoomChannel, LevelCacheItem"""
 
@@ -67,8 +68,9 @@ class LevelCache(Dict[RoomChannel, LevelCacheItem]):
         level_cache_item = self.get(room_channel)
         if level_cache_item:
             return level_cache_item.scene_levels.get(scene, 0)
+        return 0
 
-    def get_channel_levels(self, room: int, scene: int) -> Iterable[int, int]:
+    def get_channel_levels(self, room: int, scene: int) -> Iterable[Tuple[int, int]]:
         for lci in self.values():
             if lci.room == room:
                 brightness = lci.scene_levels.get(scene, 0)

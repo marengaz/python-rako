@@ -11,4 +11,3 @@ def rako_xml() -> str:
         xml = f.read()
 
     return xml
-

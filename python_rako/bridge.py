@@ -17,7 +17,16 @@ from python_rako.const import (
 )
 from python_rako.exceptions import RakoBridgeError
 from python_rako.helpers import command_to_byte_list, deserialise_byte_list
-from python_rako.model import BridgeInfo, Command, EOFResponse, Light, SceneCache, LevelCache, ChannelLight, RoomLight
+from python_rako.model import (
+    BridgeInfo,
+    ChannelLight,
+    Command,
+    EOFResponse,
+    LevelCache,
+    Light,
+    RoomLight,
+    SceneCache,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +35,8 @@ class Bridge:
     def __init__(self, host: str, port: int = RAKO_BRIDGE_DEFAULT_PORT):
         self.host = host
         self.port = port
-        self.level_cache: LevelCache
-        self.scene_cache: SceneCache
+        self.level_cache: LevelCache = LevelCache()
+        self.scene_cache: SceneCache = SceneCache()
 
     @property
     def _discovery_url(self):
@@ -141,7 +150,9 @@ class Bridge:
         byte_list = list(data)
         return deserialise_byte_list(byte_list)
 
-    async def get_cache_state(self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE) -> Tuple[LevelCache, SceneCache]:
+    async def get_cache_state(
+        self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE
+    ) -> Tuple[LevelCache, SceneCache]:
         async with self.get_dg_commander() as dg_client:
             _LOGGER.debug("Requesting cache: %s", cache_type)
             await dg_client.send(bytes([MessageType.QUERY.value, cache_type.value]))

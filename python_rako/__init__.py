@@ -10,13 +10,13 @@ from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT, MessageType, RequestType
 from python_rako.exceptions import RakoBridgeError  # noqa
 from python_rako.model import (  # noqa
     BridgeInfo,
+    ChannelLight,
     ChannelStatusMessage,
     LevelCache,
     LevelCacheItem,
     Light,
-    RoomLight,
-    ChannelLight,
     RoomChannel,
+    RoomLight,
     SceneCache,
     SceneStatusMessage,
 )

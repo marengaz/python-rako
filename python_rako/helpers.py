@@ -149,12 +149,15 @@ _scene_windows = {
 
 
 def convert_to_scene(brightness: int) -> int:
-    """Return the rako scene of the light. This directly corresponds
-    to the value of the button on the app and is accessed through the
+    """
+    Return the rako scene of the light.
+
+    This directly corresponds to the value of the button on the app and is accessed through the
     brightness
     :param brightness: int representing brightness 0-255
     """
 
-    scene = [k for k, v in _scene_windows.items() if v['low'] <= brightness < v['high']][0]
+    scene = [
+        k for k, v in _scene_windows.items() if v["low"] <= brightness < v["high"]
+    ][0]
     return scene
-

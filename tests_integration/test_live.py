@@ -97,7 +97,9 @@ async def test_set_channel_brightness(bridge: Bridge, event_loop):
 
 @pytest.mark.asyncio
 async def test_get_cache_state(bridge: Bridge):
-    level_cache, scene_cache = await bridge.get_cache_state(RequestType.SCENE_LEVEL_CACHE)
+    level_cache, scene_cache = await bridge.get_cache_state(
+        RequestType.SCENE_LEVEL_CACHE
+    )
 
     assert isinstance(level_cache, LevelCache)
     assert len(level_cache) >= 1
