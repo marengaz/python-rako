@@ -148,7 +148,10 @@ class Bridge:
             return None
 
         byte_list = list(data)
-        return deserialise_byte_list(byte_list)
+        _LOGGER.debug("Received bytes: %s", byte_list)
+        message = deserialise_byte_list(byte_list)
+        _LOGGER.debug("Deserialised received message as: %s", message)
+        return message
 
     async def get_cache_state(
         self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE
