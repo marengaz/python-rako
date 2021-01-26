@@ -126,7 +126,7 @@ check [the contributor's page][contributors].
 [marengaz]: https://github.com/marengaz
 [keepchangelog]: http://keepachangelog.com/en/1.0.0/
 [license-shield]: https://img.shields.io/github/license/marengaz/python-rako.svg
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2020.svg
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2021.svg
 [project-stage-shield]: https://img.shields.io/badge/project%20stage-experimental-yellow.svg
 [releases-shield]: https://img.shields.io/github/release/marengaz/python-rako.svg
 [releases]: https://github.com/marengaz/python-rako/releases
