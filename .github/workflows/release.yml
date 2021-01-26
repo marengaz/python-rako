@@ -21,7 +21,7 @@ jobs:
           python-version: 3.9
       - name: generate version file
         run: |
-          echo "__version__ = '$RELEASE_TAG'" > python_rako/__version__.py
+          echo '__version__ = "$RELEASE_TAG"' > python_rako/__version__.py
           cat python_rako/__version__.py
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
