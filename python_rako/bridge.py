@@ -199,6 +199,7 @@ class Bridge:
         await self._send_command(command)
 
     async def _send_command(self, command: Command):
+        _LOGGER.debug("Sending command: %s", command)
         byte_list = command_to_byte_list(command)
         async with self.get_dg_commander() as dg_client:
             _LOGGER.debug("Sending command bytes: %s", byte_list)
