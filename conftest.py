@@ -11,3 +11,11 @@ def rako_xml() -> str:
         xml = f.read()
 
     return xml
+
+
+@pytest.fixture
+def rako_xml2() -> str:
+    with open(RESOURCES / "rako2.xml") as f:
+        xml = f.read()
+
+    return xml

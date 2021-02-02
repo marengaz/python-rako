@@ -91,14 +91,14 @@ class Bridge:
     @staticmethod
     def get_bridge_info_from_discovery_xml(xml: str) -> BridgeInfo:
         xml_dict = xmltodict.parse(xml)
-        info = xml_dict["rako"]["info"]
-        config = xml_dict["rako"]["config"]
+        info = xml_dict["rako"].get("info", dict())
+        config = xml_dict["rako"].get("config", dict())
         return BridgeInfo(
             version=info.get("version"),
             buildDate=info.get("buildDate"),
             hostName=info.get("hostName"),
             hostIP=info.get("hostIP"),
-            hostMAC=info["hostMAC"],
+            hostMAC=info.get("hostMAC"),
             hwStatus=info.get("hwStatus"),
             dbVersion=info.get("dbVersion"),
             requirepassword=config.get("requirepassword"),
@@ -111,7 +111,7 @@ class Bridge:
         xml_dict = xmltodict.parse(xml)
         for room in xml_dict["rako"]["rooms"]["Room"]:
             room_id = int(room["@id"])
-            room_type = room["Type"]
+            room_type = room.get("Type", "Lights")
             if room_type != "Lights":
                 _LOGGER.info(
                     "Unsupported room type. room_id=%s room_type=%s", room_id, room_type
@@ -119,14 +119,15 @@ class Bridge:
                 continue
             room_title = room["Title"]
             yield RoomLight(room_id, room_title)
+            channels_section = room.get("Channel", [])
             channels = (
-                room["Channel"]
-                if isinstance(room["Channel"], list)
-                else [room["Channel"]]
+                channels_section
+                if isinstance(channels_section, list)
+                else [channels_section]
             )
             for channel in channels:
                 channel_id = int(channel["@id"])
-                channel_type = channel["type"]
+                channel_type = channel.get("type", "Default")
                 channel_name = channel["Name"]
                 channel_levels = channel["Levels"]
                 yield ChannelLight(

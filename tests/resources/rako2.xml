@@ -1,0 +1,22 @@
+<rako>
+    <config>
+        <requirepassword/>
+        <passhash>NAN</passhash>
+    </config>
+
+    <rooms>
+        <Room id="112">
+            <Type>Lights</Type>
+            <Title>Bedroom 1</Title>
+            <Channel id="1">
+                <Name>Ceiling Light</Name>
+                <Levels>FFBF7F3F000000000000000000000000</Levels>
+            </Channel>
+        </Room>
+
+        <Room id="108">
+            <Type>Lights</Type>
+            <Title>Master Ensuite</Title>
+        </Room>
+    </rooms>
+</rako>

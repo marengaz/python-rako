@@ -60,3 +60,40 @@ def test_get_bridge_info_from_discovery_xml(rako_xml):
         charset="UTF-8",
     )
     assert info == expected_info
+
+
+def test_get_bridge_info_from_discovery_xml2(rako_xml2):
+    info = Bridge.get_bridge_info_from_discovery_xml(rako_xml2)
+
+    expected_info = BridgeInfo(
+        version=None,
+        buildDate=None,
+        hostName=None,
+        hostIP=None,
+        hostMAC=None,
+        hwStatus=None,
+        dbVersion=None,
+        requirepassword=None,
+        passhash="NAN",
+        charset=None,
+    )
+    assert info == expected_info
+
+
+def test_get_lights_from_discovery_xml2(rako_xml2):
+    lights = Bridge.get_lights_from_discovery_xml(rako_xml2)
+
+    expected_lights = [
+        RoomLight(room_id=112, room_title="Bedroom 1", channel_id=0),
+        ChannelLight(
+            room_id=112,
+            room_title="Bedroom 1",
+            channel_id=1,
+            channel_type="Default",
+            channel_name="Ceiling Light",
+            channel_levels="FFBF7F3F000000000000000000000000",
+        ),
+        RoomLight(room_id=108, room_title="Master Ensuite", channel_id=0),
+    ]
+
+    assert list(lights) == expected_lights
