@@ -33,7 +33,7 @@ class ChannelLight(Light):
     channel_levels: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class BridgeInfo:
     version: str
     buildDate: str
