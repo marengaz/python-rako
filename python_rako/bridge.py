@@ -172,6 +172,7 @@ class Bridge:
                     scene_cache = response
                 if isinstance(response, LevelCache):
                     level_cache = response
+                _LOGGER.debug("Cache response: %s", response)
 
         return level_cache, scene_cache
 
