@@ -124,9 +124,9 @@ class CommandSceneHTTP(CommandHTTP):
 
     def as_params(self) -> Dict[str, int]:
         return {
-            'room': self.room,
-            'ch': self.channel,
-            'sc': self.scene,
+            "room": self.room,
+            "ch": self.channel,
+            "sc": self.scene,
         }
 
 
@@ -136,7 +136,7 @@ class CommandLevelHTTP(CommandHTTP):
 
     def as_params(self) -> Dict[str, int]:
         return {
-            'room': self.room,
-            'ch': self.channel,
-            'lev': self.level,
+            "room": self.room,
+            "ch": self.channel,
+            "lev": self.level,
         }

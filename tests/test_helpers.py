@@ -18,8 +18,8 @@ from python_rako.model import (
     [
         (CommandUDP(7, 0, CommandType.OFF, []), [82, 5, 0, 7, 0, 0, 244]),
         (
-                CommandUDP(276, 5, CommandType.SET_LEVEL, [0, 255]),
-                [82, 7, 1, 20, 5, 52, 0, 255, 172],
+            CommandUDP(276, 5, CommandType.SET_LEVEL, [0, 255]),
+            [82, 7, 1, 20, 5, 52, 0, 255, 172],
         ),
     ],
 )

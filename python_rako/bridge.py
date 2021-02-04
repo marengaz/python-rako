@@ -15,16 +15,23 @@ from python_rako.const import (
     RequestType,
 )
 from python_rako.exceptions import RakoBridgeError
-from python_rako.helpers import command_to_byte_list, deserialise_byte_list, get_dg_commander
+from python_rako.helpers import (
+    command_to_byte_list,
+    deserialise_byte_list,
+    get_dg_commander,
+)
 from python_rako.model import (
     BridgeInfo,
     ChannelLight,
+    CommandHTTP,
+    CommandLevelHTTP,
+    CommandSceneHTTP,
     CommandUDP,
     EOFResponse,
     LevelCache,
     Light,
     RoomLight,
-    SceneCache, CommandHTTP, CommandLevelHTTP, CommandSceneHTTP,
+    SceneCache,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,9 +58,6 @@ class _BridgeCommander:
 
 
 class BridgeCommanderUDP(_BridgeCommander):
-    def __init__(self, host: str, port: int):
-        super(BridgeCommanderUDP, self).__init__(host, port)
-
     async def set_room_scene(self, room_id: int, scene: int):
         """Set the scene of a room."""
         command = CommandUDP(
@@ -90,7 +94,7 @@ class BridgeCommanderUDP(_BridgeCommander):
 
 class BridgeCommanderHTTP(_BridgeCommander):
     def __init__(self, host: str, port: int, aiohttp_session: aiohttp.ClientSession):
-        super(BridgeCommanderHTTP, self).__init__(host, port)
+        super().__init__(host, port)
         self.aiohttp_session = aiohttp_session
 
     @property
@@ -119,19 +123,22 @@ class BridgeCommanderHTTP(_BridgeCommander):
 
     async def _send_command(self, command: CommandHTTP):
         params = command.as_params()
-        _LOGGER.debug('Posting params %s', params)
+        _LOGGER.debug("Posting params %s", params)
         await self.aiohttp_session.post(self._command_url, params=params)
 
 
 class Bridge:
     def __init__(
-            self,
-            host: str,
-            port: int = RAKO_BRIDGE_DEFAULT_PORT,
-            bridge_commander: _BridgeCommander = None):
+        self,
+        host: str,
+        port: int = RAKO_BRIDGE_DEFAULT_PORT,
+        bridge_commander: _BridgeCommander = None,
+    ):
         self.host = host
         self.port = port
-        self._bridge_commander = bridge_commander if bridge_commander else BridgeCommanderUDP(host, port)
+        self._bridge_commander = (
+            bridge_commander if bridge_commander else BridgeCommanderUDP(host, port)
+        )
         self.level_cache: LevelCache = LevelCache()
         self.scene_cache: SceneCache = SceneCache()
 
@@ -238,9 +245,7 @@ class Bridge:
             level_cache: LevelCache
             while True:
                 try:
-                    data, _ = await asyncio.wait_for(
-                        dg_client.recv(), timeout=2.0
-                    )
+                    data, _ = await asyncio.wait_for(dg_client.recv(), timeout=2.0)
                 except asyncio.TimeoutError:
                     _LOGGER.warning("Timeout waiting for cache response")
                     break
@@ -268,4 +273,6 @@ class Bridge:
         self, room_id: int, channel_id: int, brightness: int
     ):
         """Set the brightness of a channel."""
-        await self._bridge_commander.set_channel_brightness(room_id, channel_id, brightness)
+        await self._bridge_commander.set_channel_brightness(
+            room_id, channel_id, brightness
+        )

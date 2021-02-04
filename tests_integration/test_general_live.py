@@ -2,7 +2,15 @@ import aiohttp
 import aiostream
 import pytest
 
-from python_rako import Light, Bridge, RequestType, LevelCache, RoomChannel, LevelCacheItem, SceneCache
+from python_rako import (
+    Bridge,
+    LevelCache,
+    LevelCacheItem,
+    Light,
+    RequestType,
+    RoomChannel,
+    SceneCache,
+)
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,9 @@
+from typing import AsyncGenerator
+
 import aiohttp
 import pytest
 
-from python_rako import Bridge, discover_bridge, RAKO_BRIDGE_DEFAULT_PORT
+from python_rako import RAKO_BRIDGE_DEFAULT_PORT, Bridge, discover_bridge
 from python_rako.bridge import BridgeCommanderHTTP
 
 
@@ -12,8 +14,10 @@ async def udp_bridge() -> Bridge:
 
 
 @pytest.fixture
-async def http_bridge() -> Bridge:
+async def http_bridge() -> AsyncGenerator[Bridge, None]:
     bridge_host = await discover_bridge()
     async with aiohttp.ClientSession() as session:
-        bridge_commander = BridgeCommanderHTTP(bridge_host, RAKO_BRIDGE_DEFAULT_PORT, session)
+        bridge_commander = BridgeCommanderHTTP(
+            bridge_host, RAKO_BRIDGE_DEFAULT_PORT, session
+        )
         yield Bridge(bridge_host, bridge_commander=bridge_commander)

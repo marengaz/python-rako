@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Dict, List
 
 import asyncio_dgram
-from asyncio_dgram.aio import DatagramServer, DatagramClient
+from asyncio_dgram.aio import DatagramClient, DatagramServer
 
 from python_rako.const import (
     SCENE_COMMAND_TO_NUMBER,
@@ -148,22 +148,6 @@ def command_to_byte_list(command: CommandUDP) -> List[int]:
     )
 
     return byte_list
-
-
-def command_to_http_params(command: CommandUDP) -> List[int]:
-    if command.message_type is not None:
-        http_params = {
-            'room': rako_command.room,
-            'ch': rako_command.channel,
-            'sc': rako_command.scene,
-        }
-    else:
-        http_params = {
-            'room': rako_command.room,
-            'ch': rako_command.channel,
-            'lev': rako_command.brightness,
-        }
-    return http_params
 
 
 _scene_brightness = {

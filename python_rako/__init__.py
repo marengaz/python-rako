@@ -5,7 +5,7 @@ from asyncio.trsock import TransportSocket  # noqa
 
 import asyncio_dgram
 
-from python_rako.bridge import Bridge, BridgeCommanderUDP, BridgeCommanderHTTP  # noqa
+from python_rako.bridge import Bridge, BridgeCommanderHTTP, BridgeCommanderUDP  # noqa
 from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT, MessageType, RequestType  # noqa
 from python_rako.exceptions import RakoBridgeError  # noqa
 from python_rako.model import (  # noqa

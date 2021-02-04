@@ -4,11 +4,7 @@ from asyncio import Task
 
 import pytest
 
-from python_rako import (
-    Bridge,
-    ChannelStatusMessage,
-    SceneStatusMessage,
-)
+from python_rako import Bridge, ChannelStatusMessage, SceneStatusMessage
 from python_rako.helpers import get_dg_listener
 
 
@@ -105,10 +101,3 @@ async def test_set_channel_brightness_udp(udp_bridge: Bridge, event_loop):
 @pytest.mark.asyncio
 async def test_set_channel_brightness_http(http_bridge: Bridge, event_loop):
     await _test_set_channel_brightness(http_bridge, event_loop)
-
-
-
-
-
-
-
