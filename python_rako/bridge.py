@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Generator, Tuple
@@ -164,7 +165,14 @@ class Bridge:
             scene_cache: SceneCache
             level_cache: LevelCache
             while True:
-                data, _ = await dg_client.recv()
+                try:
+                    data, _ = await asyncio.wait_for(
+                        dg_client.recv(), timeout=2.0
+                    )
+                except asyncio.TimeoutError:
+                    _LOGGER.warning("Timeout waiting for cache response")
+                    break
+
                 response = deserialise_byte_list(list(data))
                 if isinstance(response, EOFResponse):
                     break
