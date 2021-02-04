@@ -1,12 +1,10 @@
 import asyncio
 import logging
-from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Generator, Tuple
 
 import aiohttp
-import asyncio_dgram
 import xmltodict
-from asyncio_dgram.aio import DatagramClient, DatagramServer
+from asyncio_dgram.aio import DatagramServer
 
 from python_rako.const import (
     COMMAND_SUCCESS_RESPONSE,
@@ -17,55 +15,129 @@ from python_rako.const import (
     RequestType,
 )
 from python_rako.exceptions import RakoBridgeError
-from python_rako.helpers import command_to_byte_list, deserialise_byte_list
+from python_rako.helpers import command_to_byte_list, deserialise_byte_list, get_dg_commander
 from python_rako.model import (
     BridgeInfo,
     ChannelLight,
-    Command,
+    CommandUDP,
     EOFResponse,
     LevelCache,
     Light,
     RoomLight,
-    SceneCache,
+    SceneCache, CommandHTTP, CommandLevelHTTP, CommandSceneHTTP,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Bridge:
-    def __init__(self, host: str, port: int = RAKO_BRIDGE_DEFAULT_PORT):
+class _BridgeCommander:
+    def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
+
+    async def set_room_scene(self, room_id: int, scene: int):
+        """Set the scene of a room."""
+        raise NotImplementedError()
+
+    async def set_room_brightness(self, room_id: int, brightness: int):
+        """Set the brightness of a room."""
+        await self.set_channel_brightness(room_id, 0, brightness)
+
+    async def set_channel_brightness(
+        self, room_id: int, channel_id: int, brightness: int
+    ):
+        """Set the brightness of a channel."""
+        raise NotImplementedError()
+
+
+class BridgeCommanderUDP(_BridgeCommander):
+    def __init__(self, host: str, port: int):
+        super(BridgeCommanderUDP, self).__init__(host, port)
+
+    async def set_room_scene(self, room_id: int, scene: int):
+        """Set the scene of a room."""
+        command = CommandUDP(
+            room=room_id,
+            channel=0,
+            command=CommandType.SET_SCENE,
+            data=[Flags.USE_DEFAULT_FADE_RATE.value, scene],
+        )
+        await self._send_command(command)
+
+    async def set_channel_brightness(
+        self, room_id: int, channel_id: int, brightness: int
+    ):
+        """Set the brightness of a channel."""
+        command = CommandUDP(
+            room=room_id,
+            channel=channel_id,
+            command=CommandType.SET_LEVEL,
+            data=[Flags.USE_DEFAULT_FADE_RATE.value, brightness],
+        )
+        await self._send_command(command)
+
+    async def _send_command(self, command: CommandUDP):
+        _LOGGER.debug("Sending command: %s", command)
+        byte_list = command_to_byte_list(command)
+        async with get_dg_commander(self.host, self.port) as dg_client:
+            _LOGGER.debug("Sending command bytes: %s", byte_list)
+            await dg_client.send(bytes(byte_list))
+            data, _ = await dg_client.recv()
+
+        if data.decode("utf8").strip() != COMMAND_SUCCESS_RESPONSE:
+            _LOGGER.warning("Bad response after command %s %s", command, data)
+
+
+class BridgeCommanderHTTP(_BridgeCommander):
+    def __init__(self, host: str, port: int, aiohttp_session: aiohttp.ClientSession):
+        super(BridgeCommanderHTTP, self).__init__(host, port)
+        self.aiohttp_session = aiohttp_session
+
+    @property
+    def _command_url(self):
+        return f"http://{self.host}/rako.cgi"
+
+    async def set_room_scene(self, room_id: int, scene: int):
+        """Set the scene of a room."""
+        command = CommandSceneHTTP(
+            room=room_id,
+            channel=0,
+            scene=scene,
+        )
+        await self._send_command(command)
+
+    async def set_channel_brightness(
+        self, room_id: int, channel_id: int, brightness: int
+    ):
+        """Set the brightness of a channel."""
+        command = CommandLevelHTTP(
+            room=room_id,
+            channel=channel_id,
+            level=brightness,
+        )
+        await self._send_command(command)
+
+    async def _send_command(self, command: CommandHTTP):
+        params = command.as_params()
+        _LOGGER.debug('Posting params %s', params)
+        await self.aiohttp_session.post(self._command_url, params=params)
+
+
+class Bridge:
+    def __init__(
+            self,
+            host: str,
+            port: int = RAKO_BRIDGE_DEFAULT_PORT,
+            bridge_commander: _BridgeCommander = None):
+        self.host = host
+        self.port = port
+        self._bridge_commander = bridge_commander if bridge_commander else BridgeCommanderUDP(host, port)
         self.level_cache: LevelCache = LevelCache()
         self.scene_cache: SceneCache = SceneCache()
 
     @property
     def _discovery_url(self):
         return f"http://{self.host}/rako.xml"
-
-    @property
-    def _command_url(self):
-        return f"http://{self.host}/rako.cgi"
-
-    @asynccontextmanager
-    async def get_dg_listener(self, listen_host: str = "0.0.0.0"):
-        server: DatagramServer = None
-        try:
-            server = await asyncio_dgram.bind((listen_host, self.port))
-            yield server
-        finally:
-            if server:
-                server.close()
-
-    @asynccontextmanager
-    async def get_dg_commander(self):
-        client: DatagramClient = None
-        try:
-            client = await asyncio_dgram.connect((self.host, self.port))
-            yield client
-        finally:
-            if client:
-                client.close()
 
     async def get_rako_xml(self, session: aiohttp.ClientSession) -> str:
         async with session.get(self._discovery_url) as response:
@@ -158,7 +230,7 @@ class Bridge:
     async def get_cache_state(
         self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE
     ) -> Tuple[LevelCache, SceneCache]:
-        async with self.get_dg_commander() as dg_client:
+        async with get_dg_commander(self.host, self.port) as dg_client:
             _LOGGER.debug("Requesting cache: %s", cache_type)
             await dg_client.send(bytes([MessageType.QUERY.value, cache_type.value]))
 
@@ -185,35 +257,15 @@ class Bridge:
         return level_cache, scene_cache
 
     async def set_room_scene(self, room_id: int, scene: int):
-        command = Command(
-            room=room_id,
-            channel=0,
-            command=CommandType.SET_SCENE,
-            data=[Flags.USE_DEFAULT_FADE_RATE.value, scene],
-        )
-        await self._send_command(command)
+        """Set the scene of a room."""
+        await self._bridge_commander.set_room_scene(room_id, scene)
 
     async def set_room_brightness(self, room_id: int, brightness: int):
-        await self.set_channel_brightness(room_id, 0, brightness)
+        """Set the brightness of a room."""
+        await self._bridge_commander.set_room_brightness(room_id, brightness)
 
     async def set_channel_brightness(
         self, room_id: int, channel_id: int, brightness: int
     ):
-        command = Command(
-            room=room_id,
-            channel=channel_id,
-            command=CommandType.SET_LEVEL,
-            data=[Flags.USE_DEFAULT_FADE_RATE.value, brightness],
-        )
-        await self._send_command(command)
-
-    async def _send_command(self, command: Command):
-        _LOGGER.debug("Sending command: %s", command)
-        byte_list = command_to_byte_list(command)
-        async with self.get_dg_commander() as dg_client:
-            _LOGGER.debug("Sending command bytes: %s", byte_list)
-            await dg_client.send(bytes(byte_list))
-            data, _ = await dg_client.recv()
-
-        if data.decode("utf8").strip() != COMMAND_SUCCESS_RESPONSE:
-            _LOGGER.warning("Bad response after command %s %s", command, data)
+        """Set the brightness of a channel."""
+        await self._bridge_commander.set_channel_brightness(room_id, channel_id, brightness)

@@ -1,4 +1,8 @@
+from contextlib import asynccontextmanager
 from typing import Dict, List
+
+import asyncio_dgram
+from asyncio_dgram.aio import DatagramServer, DatagramClient
 
 from python_rako.const import (
     SCENE_COMMAND_TO_NUMBER,
@@ -10,7 +14,7 @@ from python_rako.const import (
 from python_rako.exceptions import RakoDeserialisationException
 from python_rako.model import (
     ChannelStatusMessage,
-    Command,
+    CommandUDP,
     EOFResponse,
     LevelCache,
     LevelCacheItem,
@@ -18,6 +22,28 @@ from python_rako.model import (
     SceneCache,
     SceneStatusMessage,
 )
+
+
+@asynccontextmanager
+async def get_dg_listener(port, listen_host: str = "0.0.0.0"):
+    server: DatagramServer = None
+    try:
+        server = await asyncio_dgram.bind((listen_host, port))
+        yield server
+    finally:
+        if server:
+            server.close()
+
+
+@asynccontextmanager
+async def get_dg_commander(host, port):
+    client: DatagramClient = None
+    try:
+        client = await asyncio_dgram.connect((host, port))
+        yield client
+    finally:
+        if client:
+            client.close()
 
 
 def deserialise_byte_list(byte_list):
@@ -102,7 +128,7 @@ def calc_crc(byte_list: List[int]) -> int:
     return 256 - sum(byte_list) % 256
 
 
-def command_to_byte_list(command: Command) -> List[int]:
+def command_to_byte_list(command: CommandUDP) -> List[int]:
     checksum_list: List[int] = [
         5 + len(command.data),  # following bytes
         int(command.room / 256),  # high room number
@@ -122,6 +148,22 @@ def command_to_byte_list(command: Command) -> List[int]:
     )
 
     return byte_list
+
+
+def command_to_http_params(command: CommandUDP) -> List[int]:
+    if command.message_type is not None:
+        http_params = {
+            'room': rako_command.room,
+            'ch': rako_command.channel,
+            'sc': rako_command.scene,
+        }
+    else:
+        http_params = {
+            'room': rako_command.room,
+            'ch': rako_command.channel,
+            'lev': rako_command.brightness,
+        }
+    return http_params
 
 
 _scene_brightness = {

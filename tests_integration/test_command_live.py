@@ -2,38 +2,22 @@
 import asyncio
 from asyncio import Task
 
-import aiohttp
-import aiostream
 import pytest
 
 from python_rako import (
     Bridge,
     ChannelStatusMessage,
-    Light,
-    RequestType,
     SceneStatusMessage,
 )
-from python_rako.model import LevelCache, LevelCacheItem, RoomChannel, SceneCache
+from python_rako.helpers import get_dg_listener
 
 
-@pytest.mark.asyncio
-async def test_discover_lights(bridge: Bridge):
-    async with aiohttp.ClientSession() as session:
-        i = 0
-        async for i, light in aiostream.stream.enumerate(
-            bridge.discover_lights(session=session)
-        ):
-            assert isinstance(light, Light)
-        assert i >= 1, "no lights found"
-
-
-@pytest.mark.asyncio
-async def test_set_room_scene(bridge: Bridge, event_loop):
+async def _test_set_room_scene(bridge: Bridge, event_loop):
     test_room_id = 5
     test_scene = 1
 
     async def wait_for_response():
-        async with bridge.get_dg_listener() as listener:
+        async with get_dg_listener(bridge.port) as listener:
             response = await bridge.next_pushed_message(listener)
             assert response == SceneStatusMessage(test_room_id, 0, test_scene)
 
@@ -49,12 +33,21 @@ async def test_set_room_scene(bridge: Bridge, event_loop):
 
 
 @pytest.mark.asyncio
-async def test_set_room_brightness(bridge: Bridge, event_loop):
+async def test_set_room_scene_udp(udp_bridge: Bridge, event_loop):
+    await _test_set_room_scene(udp_bridge, event_loop)
+
+
+@pytest.mark.asyncio
+async def test_set_room_scene_http(http_bridge: Bridge, event_loop):
+    await _test_set_room_scene(http_bridge, event_loop)
+
+
+async def _test_set_room_brightness(bridge: Bridge, event_loop):
     test_room_id = 5
     test_brightness = 150
 
     async def wait_for_response():
-        async with bridge.get_dg_listener() as listener:
+        async with get_dg_listener(bridge.port) as listener:
             response = await bridge.next_pushed_message(listener)
             assert response == ChannelStatusMessage(
                 room=test_room_id, channel=0, brightness=test_brightness
@@ -72,13 +65,22 @@ async def test_set_room_brightness(bridge: Bridge, event_loop):
 
 
 @pytest.mark.asyncio
-async def test_set_channel_brightness(bridge: Bridge, event_loop):
+async def test_set_room_brightness_udp(udp_bridge: Bridge, event_loop):
+    await _test_set_room_brightness(udp_bridge, event_loop)
+
+
+@pytest.mark.asyncio
+async def test_set_room_brightness_http(http_bridge: Bridge, event_loop):
+    await _test_set_room_brightness(http_bridge, event_loop)
+
+
+async def _test_set_channel_brightness(bridge: Bridge, event_loop):
     test_room_id = 5
     test_channel_id = 5
     test_brightness = 150
 
     async def wait_for_response():
-        async with bridge.get_dg_listener() as listener:
+        async with get_dg_listener(bridge.port) as listener:
             response = await bridge.next_pushed_message(listener)
             assert response == ChannelStatusMessage(
                 room=test_room_id, channel=test_channel_id, brightness=test_brightness
@@ -96,18 +98,17 @@ async def test_set_channel_brightness(bridge: Bridge, event_loop):
 
 
 @pytest.mark.asyncio
-async def test_get_cache_state(bridge: Bridge):
-    level_cache, scene_cache = await bridge.get_cache_state(
-        RequestType.SCENE_LEVEL_CACHE
-    )
+async def test_set_channel_brightness_udp(udp_bridge: Bridge, event_loop):
+    await _test_set_channel_brightness(udp_bridge, event_loop)
 
-    assert isinstance(level_cache, LevelCache)
-    assert len(level_cache) >= 1
-    for rc, lci in level_cache.items():
-        assert isinstance(rc, RoomChannel)
-        assert isinstance(lci, LevelCacheItem)
 
-    assert isinstance(scene_cache, SceneCache)
-    for room, scene in scene_cache.items():
-        assert isinstance(room, int)
-        assert isinstance(scene, int)
+@pytest.mark.asyncio
+async def test_set_channel_brightness_http(http_bridge: Bridge, event_loop):
+    await _test_set_channel_brightness(http_bridge, event_loop)
+
+
+
+
+
+
+

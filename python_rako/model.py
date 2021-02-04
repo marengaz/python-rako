@@ -101,9 +101,42 @@ class ChannelStatusMessage(StatusMessage):
 
 # Message: Client to Bridge
 @dataclass
-class Command:
+class CommandUDP:
     room: int
     channel: int
     command: CommandType
     data: List[int]
     message_type: MessageType = MessageType.REQUEST
+
+
+@dataclass
+class CommandHTTP:
+    room: int
+    channel: int
+
+    def as_params(self) -> Dict[str, int]:
+        raise NotImplementedError()
+
+
+@dataclass
+class CommandSceneHTTP(CommandHTTP):
+    scene: int
+
+    def as_params(self) -> Dict[str, int]:
+        return {
+            'room': self.room,
+            'ch': self.channel,
+            'sc': self.scene,
+        }
+
+
+@dataclass
+class CommandLevelHTTP(CommandHTTP):
+    level: int
+
+    def as_params(self) -> Dict[str, int]:
+        return {
+            'room': self.room,
+            'ch': self.channel,
+            'lev': self.level,
+        }

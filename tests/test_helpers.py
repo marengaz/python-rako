@@ -4,7 +4,7 @@ from python_rako.const import CommandType
 from python_rako.helpers import command_to_byte_list, deserialise_byte_list
 from python_rako.model import (
     ChannelStatusMessage,
-    Command,
+    CommandUDP,
     LevelCache,
     LevelCacheItem,
     RoomChannel,
@@ -16,10 +16,10 @@ from python_rako.model import (
 @pytest.mark.parametrize(
     "in_cmd,exp_out",
     [
-        (Command(7, 0, CommandType.OFF, []), [82, 5, 0, 7, 0, 0, 244]),
+        (CommandUDP(7, 0, CommandType.OFF, []), [82, 5, 0, 7, 0, 0, 244]),
         (
-            Command(276, 5, CommandType.SET_LEVEL, [0, 255]),
-            [82, 7, 1, 20, 5, 52, 0, 255, 172],
+                CommandUDP(276, 5, CommandType.SET_LEVEL, [0, 255]),
+                [82, 7, 1, 20, 5, 52, 0, 255, 172],
         ),
     ],
 )
