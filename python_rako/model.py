@@ -48,6 +48,12 @@ class BridgeInfo:
 
 
 # Message: Bridge to Client
+@dataclass
+class UnsupportedMessage:
+    pass
+
+
+@dataclass
 class EOFResponse:
     pass
 

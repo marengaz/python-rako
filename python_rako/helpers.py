@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import Dict, List
 
@@ -11,7 +12,6 @@ from python_rako.const import (
     MessageType,
     sentinel,
 )
-from python_rako.exceptions import RakoDeserialisationException
 from python_rako.model import (
     ChannelStatusMessage,
     CommandUDP,
@@ -21,7 +21,10 @@ from python_rako.model import (
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
+    UnsupportedMessage,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -46,29 +49,32 @@ async def get_dg_commander(host, port):
             client.close()
 
 
-def deserialise_byte_list(byte_list):
+def deserialise_byte_list(byte_list: List[int]):
     try:
         message_type = MessageType(byte_list[0])
     except ValueError:
-        raise RakoDeserialisationException(
-            f"Unsupported UDP message type: {byte_list=}"
+        _LOGGER.warning("Unsupported UDP message type byte_list=%s", byte_list)
+        return UnsupportedMessage()
+
+    try:
+        if message_type == MessageType.STATUS:
+            return deserialise_status_message(byte_list)
+
+        if message_type == MessageType.SCENE_CACHE:
+            return deserialise_scene_cache_message(byte_list)
+
+        if message_type == MessageType.LEVEL_CACHE:
+            if byte_list[1] == DataRecordType.EOF.value:
+                return EOFResponse()
+            if byte_list[1] == DataRecordType.DATA.value:
+                return deserialise_level_cache_message(byte_list)
+    except (ValueError, KeyError):
+        _LOGGER.warning(
+            "Unsupported UDP message: message_type=%s, byte_list=%s",
+            message_type,
+            byte_list,
         )
-
-    if message_type == MessageType.STATUS:
-        return deserialise_status_message(byte_list)
-
-    if message_type == MessageType.SCENE_CACHE:
-        return deserialise_scene_cache_message(byte_list)
-
-    if message_type == MessageType.LEVEL_CACHE:
-        if byte_list[1] == DataRecordType.EOF.value:
-            return EOFResponse()
-        if byte_list[1] == DataRecordType.DATA.value:
-            return deserialise_level_cache_message(byte_list)
-
-    raise RakoDeserialisationException(
-        f"Unsupported UDP message: {message_type=}, {byte_list=}"
-    )
+    return UnsupportedMessage()
 
 
 def deserialise_status_message(byte_list):

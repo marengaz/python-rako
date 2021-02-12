@@ -10,6 +10,7 @@ from python_rako.model import (
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
+    UnsupportedMessage,
 )
 
 
@@ -54,6 +55,18 @@ def test_command_to_byte_list(in_cmd, exp_out):
     ],
 )
 def test_deserialise_status_message(in_bytes, exp_obj):
+    payload_result = deserialise_byte_list(in_bytes)
+    assert payload_result == exp_obj
+
+
+@pytest.mark.parametrize(
+    "in_bytes,exp_obj",
+    [
+        ([83, 6, 0, 10, 0, 50, 128, 68], UnsupportedMessage()),
+        ([1, 2, 3, 4], UnsupportedMessage()),
+    ],
+)
+def test_deserialise_unsupported_message(in_bytes, exp_obj):
     payload_result = deserialise_byte_list(in_bytes)
     assert payload_result == exp_obj
 

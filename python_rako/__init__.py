@@ -19,6 +19,7 @@ from python_rako.model import (  # noqa
     RoomLight,
     SceneCache,
     SceneStatusMessage,
+    UnsupportedMessage,
 )
 
 _LOGGER = logging.getLogger(__name__)
