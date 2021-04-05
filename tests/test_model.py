@@ -1,4 +1,4 @@
-from python_rako import LevelCache, LevelCacheItem, RoomChannel
+from python_rako.model import *
 
 
 # pylint: disable=E1137
@@ -19,6 +19,8 @@ def test_get_channel_level():
     assert res == 2
     res = level_cache.get_channel_level(r2, 1)
     assert res == 3
+    res = level_cache.get_channel_level(RoomChannel(99, 99), 99)
+    assert res == 0
 
 
 # pylint: disable=E1137
@@ -39,3 +41,33 @@ def test_get_channel_levels():
     assert (1, 1) in res
     assert (2, 3) in res
     assert len(res) == 2
+
+    res = list(level_cache.get_channel_levels(99, 99))
+    assert res == list()
+
+
+def test_command_scene_http():
+    exp = {
+        "room": 1,
+        "ch": 2,
+        "sc": 3,
+    }
+    scene = CommandSceneHTTP(1, 2, 3)
+
+    assert scene.as_params() == exp
+
+
+def test_command_level_http():
+    exp = {
+        "room": 1,
+        "ch": 2,
+        "lev": 3,
+    }
+    scene = CommandLevelHTTP(1, 2, 3)
+
+    assert scene.as_params() == exp
+
+
+def test_light():
+    light = Light(1, 'aaa', 2)
+    assert light.room_channel == RoomChannel(1, 2)

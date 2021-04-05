@@ -1,7 +1,7 @@
 import pytest
 
 from python_rako.const import CommandType
-from python_rako.helpers import command_to_byte_list, deserialise_byte_list
+from python_rako.helpers import command_to_byte_list, deserialise_byte_list, convert_to_brightness, convert_to_scene
 from python_rako.model import (
     ChannelStatusMessage,
     CommandUDP,
@@ -10,7 +10,7 @@ from python_rako.model import (
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
-    UnsupportedMessage,
+    UnsupportedMessage, EOFResponse,
 )
 
 
@@ -79,6 +79,11 @@ def test_deserialise_scene_cache_message():
     assert payload_result == exp_obj
 
 
+def test_deserialise_eof_message():
+    payload_result = deserialise_byte_list([88, 255])
+    assert payload_result == EOFResponse()
+
+
 def test_deserialise_level_cache_message():
     res = deserialise_byte_list(
         [
@@ -141,3 +146,27 @@ def test_deserialise_level_cache_message():
         }
     )
     assert res == exp
+
+
+@pytest.mark.parametrize(
+    "in_scene,exp_brightness",
+    [
+        (1, 255),
+        (0, 0),
+    ],
+)
+def test_convert_to_brightness(in_scene, exp_brightness):
+    res = convert_to_brightness(in_scene)
+    assert res == exp_brightness
+
+
+@pytest.mark.parametrize(
+    "in_brightness,exp_scene",
+    [
+        (255, 1),
+        (0, 0),
+    ],
+)
+def test_convert_to_scene(in_brightness, exp_scene):
+    res = convert_to_scene(in_brightness)
+    assert res == exp_scene
