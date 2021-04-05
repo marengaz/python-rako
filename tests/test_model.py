@@ -1,4 +1,5 @@
-from python_rako.model import *
+from python_rako import LevelCache, LevelCacheItem, RoomChannel
+from python_rako.model import CommandLevelHTTP, CommandSceneHTTP, Light
 
 
 # pylint: disable=E1137
@@ -69,5 +70,5 @@ def test_command_level_http():
 
 
 def test_light():
-    light = Light(1, 'aaa', 2)
+    light = Light(1, "aaa", 2)
     assert light.room_channel == RoomChannel(1, 2)

@@ -1,16 +1,22 @@
 import pytest
 
 from python_rako.const import CommandType
-from python_rako.helpers import command_to_byte_list, deserialise_byte_list, convert_to_brightness, convert_to_scene
+from python_rako.helpers import (
+    command_to_byte_list,
+    convert_to_brightness,
+    convert_to_scene,
+    deserialise_byte_list,
+)
 from python_rako.model import (
     ChannelStatusMessage,
     CommandUDP,
+    EOFResponse,
     LevelCache,
     LevelCacheItem,
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
-    UnsupportedMessage, EOFResponse,
+    UnsupportedMessage,
 )
 
 
