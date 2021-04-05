@@ -237,12 +237,12 @@ class Bridge:
     async def get_cache_state(
         self, cache_type: RequestType = RequestType.SCENE_LEVEL_CACHE
     ) -> Tuple[LevelCache, SceneCache]:
+        scene_cache = SceneCache()
+        level_cache = LevelCache()
         async with get_dg_commander(self.host, self.port) as dg_client:
             _LOGGER.debug("Requesting cache: %s", cache_type)
             await dg_client.send(bytes([MessageType.QUERY.value, cache_type.value]))
 
-            scene_cache: SceneCache
-            level_cache: LevelCache
             while True:
                 try:
                     data, _ = await asyncio.wait_for(dg_client.recv(), timeout=2.0)
