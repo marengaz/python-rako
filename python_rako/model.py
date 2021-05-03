@@ -17,7 +17,7 @@ class Light:
     channel_id: int
 
     @property
-    def room_channel(self):
+    def room_channel(self) -> RoomChannel:
         return RoomChannel(self.room_id, self.channel_id)
 
 

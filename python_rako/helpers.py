@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from typing import Dict, List
+from typing import Any, AsyncIterator, Dict, List
 
 import asyncio_dgram
 from asyncio_dgram.aio import DatagramClient, DatagramServer
@@ -21,6 +21,7 @@ from python_rako.model import (
     RoomChannel,
     SceneCache,
     SceneStatusMessage,
+    StatusMessage,
     UnsupportedMessage,
 )
 
@@ -28,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def get_dg_listener(port, listen_host: str = "0.0.0.0"):
+async def get_dg_listener(
+    port: int, listen_host: str = "0.0.0.0"
+) -> AsyncIterator[DatagramServer]:
     server: DatagramServer = None
     try:
         server = await asyncio_dgram.bind((listen_host, port))
@@ -39,7 +42,7 @@ async def get_dg_listener(port, listen_host: str = "0.0.0.0"):
 
 
 @asynccontextmanager
-async def get_dg_commander(host, port):
+async def get_dg_commander(host: str, port: int) -> AsyncIterator[DatagramClient]:
     client: DatagramClient = None
     try:
         client = await asyncio_dgram.connect((host, port))
@@ -49,7 +52,7 @@ async def get_dg_commander(host, port):
             client.close()
 
 
-def deserialise_byte_list(byte_list: List[int]):
+def deserialise_byte_list(byte_list: List[int]) -> Any:
     try:
         message_type = MessageType(byte_list[0])
     except ValueError:
@@ -77,7 +80,7 @@ def deserialise_byte_list(byte_list: List[int]):
     return UnsupportedMessage()
 
 
-def deserialise_status_message(byte_list):
+def deserialise_status_message(byte_list: List[int]) -> StatusMessage:
     data_length = byte_list[1] - 5
     room = byte_list[2] * 256 + byte_list[3]
     channel = byte_list[4]

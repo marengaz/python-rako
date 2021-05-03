@@ -39,6 +39,9 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms="any",
+    package_data={
+        "python_rako": ["py.typed"],
+    },
     install_requires=list(val.strip() for val in open("requirements.txt")),
     classifiers=[
         "Intended Audience :: Developers",

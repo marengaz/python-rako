@@ -42,9 +42,10 @@ repos:
     hooks:
       - id: pylint
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.782
+    rev: v0.812
     hooks:
       - id: mypy
+        files: ^python_rako/.+\.py$
   - repo: https://github.com/pycqa/flake8
     rev: 3.8.3
     hooks:

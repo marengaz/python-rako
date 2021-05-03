@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import AsyncGenerator, Generator, Tuple
+from typing import Any, AsyncGenerator, Generator, Tuple
 
 import aiohttp
 import xmltodict
@@ -42,23 +44,23 @@ class _BridgeCommander:
         self.host = host
         self.port = port
 
-    async def set_room_scene(self, room_id: int, scene: int):
+    async def set_room_scene(self, room_id: int, scene: int) -> None:
         """Set the scene of a room."""
         raise NotImplementedError()
 
-    async def set_room_brightness(self, room_id: int, brightness: int):
+    async def set_room_brightness(self, room_id: int, brightness: int) -> None:
         """Set the brightness of a room."""
         await self.set_channel_brightness(room_id, 0, brightness)
 
     async def set_channel_brightness(
         self, room_id: int, channel_id: int, brightness: int
-    ):
+    ) -> None:
         """Set the brightness of a channel."""
         raise NotImplementedError()
 
 
 class BridgeCommanderUDP(_BridgeCommander):
-    async def set_room_scene(self, room_id: int, scene: int):
+    async def set_room_scene(self, room_id: int, scene: int) -> None:
         """Set the scene of a room."""
         command = CommandUDP(
             room=room_id,
@@ -70,7 +72,7 @@ class BridgeCommanderUDP(_BridgeCommander):
 
     async def set_channel_brightness(
         self, room_id: int, channel_id: int, brightness: int
-    ):
+    ) -> None:
         """Set the brightness of a channel."""
         command = CommandUDP(
             room=room_id,
@@ -80,7 +82,7 @@ class BridgeCommanderUDP(_BridgeCommander):
         )
         await self._send_command(command)
 
-    async def _send_command(self, command: CommandUDP):
+    async def _send_command(self, command: CommandUDP) -> None:
         _LOGGER.debug("Sending command: %s", command)
         byte_list = command_to_byte_list(command)
         async with get_dg_commander(self.host, self.port) as dg_client:
@@ -98,10 +100,10 @@ class BridgeCommanderHTTP(_BridgeCommander):
         self.aiohttp_session = aiohttp_session
 
     @property
-    def _command_url(self):
+    def _command_url(self) -> str:
         return f"http://{self.host}/rako.cgi"
 
-    async def set_room_scene(self, room_id: int, scene: int):
+    async def set_room_scene(self, room_id: int, scene: int) -> None:
         """Set the scene of a room."""
         command = CommandSceneHTTP(
             room=room_id,
@@ -112,7 +114,7 @@ class BridgeCommanderHTTP(_BridgeCommander):
 
     async def set_channel_brightness(
         self, room_id: int, channel_id: int, brightness: int
-    ):
+    ) -> None:
         """Set the brightness of a channel."""
         command = CommandLevelHTTP(
             room=room_id,
@@ -121,7 +123,7 @@ class BridgeCommanderHTTP(_BridgeCommander):
         )
         await self._send_command(command)
 
-    async def _send_command(self, command: CommandHTTP):
+    async def _send_command(self, command: CommandHTTP) -> None:
         params = command.as_params()
         _LOGGER.debug("Posting params %s", params)
         await self.aiohttp_session.post(self._command_url, params=params)
@@ -132,7 +134,7 @@ class Bridge:
         self,
         host: str,
         port: int = RAKO_BRIDGE_DEFAULT_PORT,
-        bridge_commander: _BridgeCommander = None,
+        bridge_commander: _BridgeCommander | None = None,
     ):
         self.host = host
         self.port = port
@@ -143,12 +145,12 @@ class Bridge:
         self.scene_cache: SceneCache = SceneCache()
 
     @property
-    def _discovery_url(self):
+    def _discovery_url(self) -> str:
         return f"http://{self.host}/rako.xml"
 
     async def get_rako_xml(self, session: aiohttp.ClientSession) -> str:
         async with session.get(self._discovery_url) as response:
-            rako_xml = await response.text()
+            rako_xml: str = await response.text()
         return rako_xml
 
     async def discover_lights(
@@ -219,7 +221,7 @@ class Bridge:
                     channel_levels,
                 )
 
-    async def next_pushed_message(self, dg_listener: DatagramServer):
+    async def next_pushed_message(self, dg_listener: DatagramServer) -> Any | None:
         resp = await dg_listener.recv()
         if not resp:
             return None
@@ -261,17 +263,17 @@ class Bridge:
 
         return level_cache, scene_cache
 
-    async def set_room_scene(self, room_id: int, scene: int):
+    async def set_room_scene(self, room_id: int, scene: int) -> None:
         """Set the scene of a room."""
         await self._bridge_commander.set_room_scene(room_id, scene)
 
-    async def set_room_brightness(self, room_id: int, brightness: int):
+    async def set_room_brightness(self, room_id: int, brightness: int) -> None:
         """Set the brightness of a room."""
         await self._bridge_commander.set_room_brightness(room_id, brightness)
 
     async def set_channel_brightness(
         self, room_id: int, channel_id: int, brightness: int
-    ):
+    ) -> None:
         """Set the brightness of a channel."""
         await self._bridge_commander.set_channel_brightness(
             room_id, channel_id, brightness

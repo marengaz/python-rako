@@ -2,6 +2,7 @@ import asyncio
 import logging
 import socket
 from asyncio.trsock import TransportSocket  # noqa
+from typing import cast
 
 import asyncio_dgram
 
@@ -31,12 +32,13 @@ async def discover_bridge() -> str:
     server = await asyncio_dgram.from_socket(sock)
     await server.send(b"D", ("255.255.255.255", RAKO_BRIDGE_DEFAULT_PORT))
     _, (host, _) = await server.recv()
-    return host
+    return cast(str, host)
 
 
-def main():
+def main() -> None:
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(asyncio.gather(discover_bridge()))
+    bridge_ip = loop.run_until_complete(asyncio.gather(discover_bridge()))
+    print(bridge_ip[0])
 
 
 if __name__ == "__main__":
