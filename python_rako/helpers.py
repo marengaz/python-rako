@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Dict, List
+from typing import AsyncIterator, Dict, List
 
 import asyncio_dgram
 from asyncio_dgram.aio import DatagramClient, DatagramServer
@@ -52,7 +54,9 @@ async def get_dg_commander(host: str, port: int) -> AsyncIterator[DatagramClient
             client.close()
 
 
-def deserialise_byte_list(byte_list: List[int]) -> Any:
+def deserialise_byte_list(
+    byte_list: List[int],
+) -> UnsupportedMessage | EOFResponse | StatusMessage | SceneCache | LevelCache:
     try:
         message_type = MessageType(byte_list[0])
     except ValueError:
