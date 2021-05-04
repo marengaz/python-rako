@@ -134,10 +134,14 @@ class Bridge:
         self,
         host: str,
         port: int = RAKO_BRIDGE_DEFAULT_PORT,
+        name: str | None = None,
+        mac: str | None = None,
         bridge_commander: _BridgeCommander | None = None,
     ):
         self.host = host
         self.port = port
+        self.name = name
+        self.mac = mac
         self._bridge_commander = (
             bridge_commander if bridge_commander else BridgeCommanderUDP(host, port)
         )

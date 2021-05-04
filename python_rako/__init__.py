@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import socket
 from asyncio.trsock import TransportSocket  # noqa
-from typing import cast
+from typing import TypedDict
 
 import asyncio_dgram
 
@@ -26,19 +28,35 @@ from python_rako.model import (  # noqa
 _LOGGER = logging.getLogger(__name__)
 
 
-async def discover_bridge() -> str:
+class BridgeDescription(TypedDict, total=False):
+    host: str
+    port: int
+    name: str | None
+    mac: str | None
+
+
+async def discover_bridge() -> BridgeDescription:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     server = await asyncio_dgram.from_socket(sock)
     await server.send(b"D", ("255.255.255.255", RAKO_BRIDGE_DEFAULT_PORT))
-    _, (host, _) = await server.recv()
-    return cast(str, host)
+    msg, (host, port) = await server.recv()
+    bridge_description: BridgeDescription = {"host": host, "port": port}
+    try:
+        name, mac = msg.decode("utf8").split()
+        bridge_description["name"] = name
+        bridge_description["mac"] = mac
+    except ValueError:
+        pass
+    return bridge_description
 
 
 def main() -> None:
     loop = asyncio.get_event_loop()
-    bridge_ip = loop.run_until_complete(asyncio.gather(discover_bridge()))
-    print(bridge_ip[0])
+    bridge_desc: BridgeDescription = loop.run_until_complete(
+        asyncio.gather(discover_bridge())
+    )[0]
+    print(bridge_desc)
 
 
 if __name__ == "__main__":
