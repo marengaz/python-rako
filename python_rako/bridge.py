@@ -10,7 +10,6 @@ from asyncio_dgram.aio import DatagramServer
 
 from python_rako.const import (
     COMMAND_SUCCESS_RESPONSE,
-    RAKO_BRIDGE_DEFAULT_PORT,
     CommandType,
     Flags,
     MessageType,
@@ -133,9 +132,9 @@ class Bridge:
     def __init__(
         self,
         host: str,
-        port: int = RAKO_BRIDGE_DEFAULT_PORT,
-        name: str | None = None,
-        mac: str | None = None,
+        port: int,
+        name: str,
+        mac: str,
         bridge_commander: _BridgeCommander | None = None,
     ):
         self.host = host

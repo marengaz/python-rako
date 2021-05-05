@@ -31,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 class BridgeDescription(TypedDict, total=False):
     host: str
     port: int
-    name: str | None
-    mac: str | None
+    name: str
+    mac: str
 
 
 async def discover_bridge() -> BridgeDescription:
@@ -47,7 +47,7 @@ async def discover_bridge() -> BridgeDescription:
         bridge_description["name"] = name
         bridge_description["mac"] = mac
     except ValueError:
-        pass
+        raise ValueError(f"Couldn't interpret discovery response message: {msg}")
     return bridge_description
 
 
