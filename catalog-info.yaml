@@ -9,8 +9,8 @@ metadata:
     - python3
     - async
   links:
-    url: https://www.home-assistant.io/integrations/rako/
-    title: Home Assistant Rako Integration
+    - url: https://www.home-assistant.io/integrations/rako/
+      title: Home Assistant Rako Integration
 spec:
   type: library
   lifecycle: production
