@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: python-rako
+  description: Asynchronous Python client for Rako Controls Lighting
+  annotations:
+    github.com/project-slug: 'marengaz/python-rako'
+  tags:
+    - python3
+    - async
+  links:
+    url: https://www.home-assistant.io/integrations/rako/
+    title: Home Assistant Rako Integration
+spec:
+  type: library
+  lifecycle: production
+  owner: user:guest
