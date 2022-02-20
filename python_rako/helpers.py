@@ -174,7 +174,7 @@ _scene_brightness = {
 
 
 def convert_to_brightness(scene_number: int) -> int:
-    # scenes can exist outside of 0-4. 
+    # scenes can exist outside of 0-4.
     # rather than KeyError, lets return mid-level brightness
     return _scene_brightness.get(scene_number, 128)
 
